@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Мой сайт</title>
+<style>
+  body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: #f5f6f8; color: #222; }
+  .wrap { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+
+  /* Экран "браузер устарел" — по умолчанию скрыт */
+  #outdated { display: none; }
+  .old-os #outdated {
+    display: block; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: #fff; z-index: 99999; text-align: center; padding: 15vh 20px 0;
+  }
+  .old-os #site, .checking #site { display: none; }
+  .checking #site { visibility: hidden; }
+
+  #outdated h1 { font-size: 28px; margin: 0 0 16px; }
+  #outdated p { font-size: 18px; color: #555; max-width: 520px; margin: 0 auto 12px; }
+  #outdated a {
+    display: inline-block; margin: 8px 6px; padding: 12px 22px;
+    background: #2563eb; color: #fff; text-decoration: none; border-radius: 6px;
+  }
+</style>
+
+<script>
+  // Определяем версию Windows по User-Agent (код на ES5, чтобы работал в старых браузерах)
+  // Windows NT 5.1 / 5.2 = XP, 6.0 = Vista, 6.1 = 7
+  (function () {
+    var root = document.documentElement;
+    var ua = navigator.userAgent || '';
+
+    function block() { root.className = root.className.replace(' checking', '') + ' old-os'; }
+    function allow() { root.className = root.className.replace(' checking', ''); }
+
+    // Windows XP (5.1/5.2), Vista (6.0), 7 (6.1), 8 (6.2), 8.1 (6.3)
+    if (/Windows NT (5\.0|5\.1|5\.2|6\.0|6\.1|6\.2|6\.3)/.test(ua) || /Windows (XP|2000|Vista)/.test(ua)) {
+      block();
+      return;
+    }
+
+    // macOS (исключаем iPad, который тоже выдаёт себя за Mac)
+    var isMac = /Macintosh|Mac OS X/.test(ua) && !(navigator.maxTouchPoints > 1);
+    if (!isMac) return;
+
+    // Старые macOS 10.x: некоторые браузеры ещё показывают реальную версию (ниже 10_15)
+    var m = ua.match(/Mac OS X (\d+)[_.](\d+)/);
+    if (m && parseInt(m[1], 10) === 10 && parseInt(m[2], 10) < 15) { block(); return; }
+
+    // Современные браузеры "замораживают" версию в User-Agent на 10_15_7,
+    // поэтому настоящую версию (11 ... 15, 26) берём через userAgentData.
+    // Работает только в Chromium-браузерах (Chrome, Edge, Opera, Brave, Arc).
+    var uad = navigator.userAgentData;
+    if (uad && uad.getHighEntropyValues) {
+      root.className += ' checking'; // прячем сайт, пока идёт проверка
+      uad.getHighEntropyValues(['platformVersion']).then(function (v) {
+        var major = parseInt(String(v.platformVersion || '').split('.')[0], 10);
+        // macOS 10.x и 11-15 -> блок; 26 и новее -> пускаем
+        if (major <= 15) block(); else allow();
+      }, allow);
+    }
+  })();
+</script>
+</head>
+<body>
+
+  <!-- Сообщение для пользователей Windows XP / Vista / 7 -->
+  <div id="outdated">
+    <h1>Ваш браузер устарел</h1>
+    <p>Для работы сайта необходим современный браузер. Пожалуйста, установите новый браузер и откройте сайт снова.</p>
+    <p>
+      <a href="https://www.google.com/chrome/">Chrome</a>
+      <a href="https://www.mozilla.org/firefox/new/">Firefox</a>
+      <a href="https://www.microsoft.com/edge">Edge</a>
+    </p>
+  </div>
+
+  <!-- Основной сайт -->
+  <div id="site">
+    <div class="wrap">
+      <h1>Добро пожаловать!</h1>
+      <p>Здесь содержимое вашего сайта.</p>
+    </div>
+  </div>
+
+</body>
+</html>
